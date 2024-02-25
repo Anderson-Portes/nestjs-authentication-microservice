@@ -25,9 +25,11 @@ export class AuthService {
         errors: { email: message, password: message },
       });
     }
-    const { password, ...result } = user;
     return {
-      accessToken: await this.jwtService.signAsync(result),
+      accessToken: await this.jwtService.signAsync({
+        ...user,
+        password: undefined,
+      }),
     };
   }
 
