@@ -8,12 +8,12 @@ datasource db {
 }
 
 model Role {
-  id             String           @id @default(uuid())
-  name           String           @unique
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  User           User[]
-  RolePermission RolePermission[]
+  id              String           @id @default(uuid())
+  name            String           @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  rolePermissions RolePermission[]
+  users           User[]
 }
 
 model User {
@@ -28,19 +28,19 @@ model User {
 }
 
 model Permission {
-  id             String           @id @default(uuid())
-  name           String           @unique
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  RolePermission RolePermission[]
+  id              String           @id @default(uuid())
+  name            String           @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  rolePermissions RolePermission[]
 }
 
 model RolePermission {
   roleId       String
   permissionId String
   createdAt    DateTime   @default(now())
-  role         Role       @relation(fields: [roleId], references: [id])
   permission   Permission @relation(fields: [permissionId], references: [id])
+  role         Role       @relation(fields: [roleId], references: [id])
 
   @@id([roleId, permissionId])
 }

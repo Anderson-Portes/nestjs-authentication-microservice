@@ -24,9 +24,21 @@ export class AuthenticatedGuard implements CanActivate {
     }
     try {
       const { id } = (await this.jwtService.verifyAsync(token)) as User;
-      request.user = await this.prisma.user.findUniqueOrThrow({
+      const user = await this.prisma.user.findUniqueOrThrow({
         where: { id },
       });
+      const rolePermissions = await this.prisma.rolePermission.findMany({
+        where: { roleId: user.roleId },
+        include: {
+          permission: true,
+        },
+      });
+      request.user = {
+        ...user,
+        permissions: rolePermissions.map(
+          (rolePermission) => rolePermission.permission.name,
+        ),
+      };
     } catch {
       throw new UnauthorizedException();
     }
