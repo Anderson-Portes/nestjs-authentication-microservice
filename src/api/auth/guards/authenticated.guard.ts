@@ -6,10 +6,16 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { User } from 'src/api/admin/users/entities/user.entity';
+import { UsersService } from 'src/api/admin/users/users.service';
+import { PrismaService } from 'src/shared/prisma/prisma.service';
 
 @Injectable()
 export class AuthenticatedGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -18,8 +24,10 @@ export class AuthenticatedGuard implements CanActivate {
       throw new UnauthorizedException();
     }
     try {
-      const payload = await this.jwtService.verifyAsync(token);
-      request.user = payload;
+      const { id } = (await this.jwtService.verifyAsync(token)) as User;
+      request.user = await this.prisma.user.findUniqueOrThrow({
+        where: { id },
+      });
     } catch {
       throw new UnauthorizedException();
     }

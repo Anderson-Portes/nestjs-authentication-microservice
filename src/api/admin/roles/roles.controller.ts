@@ -10,7 +10,9 @@ import {
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { Authenticated } from 'src/api/auth/decorator/authenticated.decorator';
 
+@Authenticated()
 @Controller('roles')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}

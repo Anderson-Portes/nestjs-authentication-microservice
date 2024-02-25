@@ -13,7 +13,9 @@ export class RolesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateRoleDto) {
-    const role = await this.findOne({ name: data.name });
+    const role = await this.prisma.role.findUnique({
+      where: { name: data.name },
+    });
     if (role) {
       const errors = { name: 'Role already exists.' };
       throw new BadRequestException({ errors });
@@ -34,7 +36,9 @@ export class RolesService {
   }
 
   async update(id: string, data: UpdateRoleDto) {
-    const role = await this.findOne({ name: data.name, id: { not: id } });
+    const role = await this.prisma.role.findFirst({
+      where: { name: UpdateRoleDto.name, id: { not: id } },
+    });
     if (role) {
       const errors = { name: 'Role already exists.' };
       throw new BadRequestException({ errors });
