@@ -28,15 +28,15 @@ const main = async () => {
     'list permissions',
   ];
   const commonPermissions = ['show profile', 'edit profile'];
-  for await (const name of adminPermissions) {
+  adminPermissions.forEach(async (name) => {
     const { id: permissionId } = await prisma.permission.create({
       data: { name },
     });
     await prisma.rolePermission.create({
       data: { roleId: adminRoleId, permissionId },
     });
-  }
-  for await (const name of commonPermissions) {
+  });
+  commonPermissions.forEach(async (name) => {
     const { id: permissionId } = await prisma.permission.create({
       data: { name },
     });
@@ -46,7 +46,7 @@ const main = async () => {
         { roleId: adminRoleId, permissionId },
       ],
     });
-  }
+  });
   await prisma.user.create({
     data: {
       name: 'Admin',
