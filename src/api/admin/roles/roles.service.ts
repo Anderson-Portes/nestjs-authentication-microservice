@@ -12,23 +12,35 @@ import { Prisma } from '@prisma/client';
 export class RolesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: CreateRoleDto) {
-    const role = await this.prisma.role.findUnique({
-      where: { name: data.name },
+  async create({ name, permissionsIds }: CreateRoleDto) {
+    const roleExists = await this.prisma.role.findUnique({
+      where: { name },
     });
-    if (role) {
+    if (roleExists) {
       const errors = { name: 'Role already exists.' };
       throw new BadRequestException({ errors });
     }
-    return await this.prisma.role.create({ data });
+    const role = await this.prisma.role.create({ data: { name } });
+    await this.prisma.rolePermission.createMany({
+      data: permissionsIds.map((id) => ({
+        roleId: role.id,
+        permissionId: id,
+      })),
+    });
+    return role;
   }
 
   async findAll() {
-    return await this.prisma.role.findMany();
+    return await this.prisma.role.findMany({
+      include: { rolePermissions: { include: { permission: true } } },
+    });
   }
 
   async findOne(where: Prisma.RoleWhereInput) {
-    const role = await this.prisma.role.findFirst({ where });
+    const role = await this.prisma.role.findFirst({
+      where,
+      include: { rolePermissions: { include: { permission: true } } },
+    });
     if (!role) {
       throw new NotFoundException();
     }
@@ -36,17 +48,28 @@ export class RolesService {
   }
 
   async update(id: string, data: UpdateRoleDto) {
-    const role = await this.prisma.role.findFirst({
+    const roleExists = await this.prisma.role.findFirst({
       where: { name: UpdateRoleDto.name, id: { not: id } },
     });
-    if (role) {
+    if (roleExists) {
       const errors = { name: 'Role already exists.' };
       throw new BadRequestException({ errors });
     }
-    return this.prisma.role.update({
+    const { permissionsIds, ...result } = data;
+    const role = await this.prisma.role.update({
       where: { id },
-      data,
+      data: result,
     });
+    await this.prisma.rolePermission.deleteMany({ where: { roleId: role.id } });
+    if (permissionsIds?.length > 0) {
+      await this.prisma.rolePermission.createMany({
+        data: permissionsIds.map((id) => ({
+          roleId: role.id,
+          permissionId: id,
+        })),
+      });
+    }
+    return role;
   }
 
   async remove(id: string) {

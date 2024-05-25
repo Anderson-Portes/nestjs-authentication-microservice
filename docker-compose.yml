@@ -7,8 +7,8 @@ services:
     volumes:
       - .:/app
     restart: always
-    depends_on:
-      - database
+    networks:
+      - default
   database:
     image: postgres
     ports:
@@ -20,3 +20,5 @@ services:
     volumes:
       - ./.postgres:/var/lib/postgresql/data
     restart: always
+    networks:
+      - default
